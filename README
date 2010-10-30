@@ -1,0 +1,35 @@
+Simple compressor for javascript and css files. Propose of this package is to
+make compressing with easy ways. It means that you do not need run compressor
+in single mode through shell or another application to get new files, but get 
+them right after you open webpage.
+
+It includes jinja2 filter to make it easy.
+
+Jinja2 ways:
+
+1. Append to your jinja2 filters.
+
+jccompressor.ext.jinja2.compress.compress_css
+jccompressor.ext.jinja2.compress.compress_js
+
+2. We defined some settings for flexible setup of jccompressor.
+
+# Should jccompressor compress scripts.
+JC_MAKE_COMPRESS = True
+# Should jccompressor compress scripts every time
+# when you run application. It is usefull for debug mode.
+JC_FORCE_BUILD = True
+# Should jccompressor only combine scripts and do not make compiling.
+JC_ONLY_COMBINING = True
+# Version of built scripts.
+JC_SCRIPTS_VERSION = '23'
+# Path to built scripts to save.
+COMPRESSED_MEDIA_URL = MEDIA_URL + 'build/'
+
+3. Use filters in your jinja2 template.
+
+{% set css = ['1.css', '2.css', '3.css'] %}
+{{ css|compress_css }}
+
+{% set js = ['1.js', '2.js', '3.js'] %}
+{{ js|compress_js }}
