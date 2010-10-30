@@ -1,4 +1,4 @@
-Simple compressor for javascript and css files. Propose of this package is to
+Simple compressor for javascript and css files. Purpose of this package is to
 make compressing with easy ways. It means that you do not need run compressor
 in single mode through shell or another application to get new files, but get 
 them right after you open webpage.

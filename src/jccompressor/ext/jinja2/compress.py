@@ -1,4 +1,3 @@
-import logging
 import os
 
 from django.conf import settings
@@ -10,8 +9,6 @@ try:
     from django.conf.settings import JC_MEDIA_ROOT
 except:
     JC_MEDIA_ROOT=os.path.join(settings.MEDIA_ROOT,'build')
-
-logger = logging.getLogger('jccompressor.ext.jinja2.compress')
 
 
 def compress_css(styles):
@@ -36,7 +33,7 @@ class CompressMedia:
             url = self.get_media_url(filename, mediatype, prefix=settings.MEDIA_ROOT)
             media_urls.append(url)
 
-        fullpath = os.path.join(JC_MEDIA_ROOT)
+        fullpath = JC_MEDIA_ROOT
         if not os.path.exists(fullpath):
             os.makedirs(fullpath)
 
