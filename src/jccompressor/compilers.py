@@ -152,7 +152,7 @@ class GoogleJCCompiler(Compiler):
             '--js %s' % filename,
             '--js_output_file %s.tmp' % filename,
             '--charset %s' % self.charset]
-        subprocess.check_call()
+        subprocess.check_call(attrs)
         shutil.move(filename + '.tmp', filename)
         return True
 
