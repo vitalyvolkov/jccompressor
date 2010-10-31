@@ -92,6 +92,7 @@ class Compiler(object):
         _built_fname = os.path.join(self.dest, self.get_output_filename())
         if self.exists_andnot_force(forcebuild, _built_fname):
             return False
+        logger.debug("Combining to %s", _built_fname)
         _built_fd = self._openfile(_built_fname, 'w')
         # collect all content of scripts into files to be compressed
         for script in self.scripts:
@@ -121,9 +122,10 @@ class Compiler(object):
             return True
         filename = os.path.join(self.dest, self.output_filename)
         try:
+            logger.debug("Compressing to %s", filename)
             return self.compile(filename)
-        except OSError, e:
-            logger.error('OSError: %s', e)
+        except (OSError, IOError, subprocess.CalledProcessError), e:
+            logger.error('%r: %s', type(e), e)
         return False
 
     def compile(self):
