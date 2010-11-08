@@ -150,10 +150,14 @@ class GoogleJCCompiler(Compiler):
         """
         attrs = [
             'java',
-            '-jar %s/compiler.jar' % Compiler.COMPILER_PATH,
-            '--js %s' % filename,
-            '--js_output_file %s.tmp' % filename,
-            '--charset %s' % self.charset]
+            '-jar',
+            '%s/compiler.jar' % Compiler.COMPILER_PATH,
+            '--js',
+            filename,
+            '--js_output_file',
+            '%s.tmp' % filename,
+            '--charset',
+            self.charset]
         subprocess.check_call(attrs)
         shutil.move(filename + '.tmp', filename)
         return True
@@ -169,11 +173,15 @@ class YuiJCCompiler(Compiler):
         """
         attrs = [
             'java',
-            '-jar %s/yuicompressor.jar' % Compiler.COMPILER_PATH,
-            '-o %s.tmp' % filename,
-            '--type %s' % self.scriptype,
-            '--charset %s' % self.charset,
-            '%s' % filename]
+            '-jar',
+            '%s/yuicompressor.jar' % Compiler.COMPILER_PATH,
+            '-o',
+            '%s.tmp' % filename,
+            '--type',
+            self.scriptype,
+            '--charset',
+            self.charset,
+            filename]
 
         # using compiler place compressed content into temporary file
         # and then we replace original combined file with this one
