@@ -132,7 +132,7 @@ class Compiler(object):
                 # @todo implement splitting
                 pass
             fd = self._openfile(script)
-            content = self.backend.read(fd.read())
+            content = self.backend.read(fd)
             _built_fd.write(content)
             fd.close()
         _built_fd.close()

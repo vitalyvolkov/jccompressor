@@ -4,4 +4,4 @@ class BaseJCBackend:
         self.filetype = filetype
 
     def read(self, stream):
-        return stream
+        return stream.read()
