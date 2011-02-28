@@ -33,3 +33,32 @@ COMPRESSED_MEDIA_URL = MEDIA_URL + 'build/'
 
 {% set js = ['1.js', '2.js', '3.js'] %}
 {{ js|compress_js }}
+
+4. Usage of backends.
+
+I have added support of backends to manipulate content of your files.
+Backend should be defined in settings files of django project.
+
+JCBACKEND="your.own.backend.Klass"
+
+Your backend should define only one method that gets opened file descriptor
+with content of script. You always can check what type currently handled
+through member variable `filetype`. It should be "css" or "js".
+
+Some example:
+
+import os
+import subprocess
+
+from jccompressor.backends.base import BaseJCBackend
+
+
+class StylusBackend(BaseJCBackend):
+
+    def read(self, stream):
+        devnull = open(os.devnull, "w")
+        try:
+            return subprocess.Popen(["stylus"], stdin=stream, stdout=devnull)
+        except (OSError, subprocess.CalledProcessError):
+            pass
+        return ''
