@@ -1,10 +1,22 @@
+"""
+This module defines a class :py:class:`Compiler` that combines
+all of your stylesheets or javascripts files into one file with
+compressing its content through yui-compiler or google-compiler.
+"""
+
 import codecs, hashlib, os, shutil
-import datetime
+
 import logging
+import re
 import subprocess
+
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from django.utils.importlib import import_module
 
 
 logger = logging.getLogger('jccompressor.compilers')
+backend = 'jccompressor.backends.simple.SimpleJCBackend'
 
 
 __all__ = ('GoogleJCCompiler', 'YuiJCCompiler', 'ScriptNotFound')
@@ -15,20 +27,29 @@ class ScriptNotFound(BaseException):
 
 
 class Compiler(object):
-    """
-    Base class to compile scripts.
-
-    It contains abstract method `compile` that have to be defined in
-    inheritanced classes.
-    """
 
     COMPILER_PATH = os.path.join(os.path.dirname(__file__), 'build')
 
-    def __init__(self, scripts, scriptype, dest, 
+    def get_backend(self, filetype):
+        path = getattr(settings, 'JC_BACKEND', None) or backend
+        try:
+            mod_name, klass_name = path.rsplit('.', 1)
+            mod = import_module(mod_name)
+        except ImportError, e:
+            raise ImproperlyConfigured(('Error importing jccompressor backend '
+                                        'module %s: "%s"' % (mod_name, e)))
+        try:
+            klass = getattr(mod, klass_name)
+        except AttributeError:
+            raise ImproperlyConfigured(('Module "%s" does not define a "%s" '
+                                        ' class' % (mod_name, klass_name)))
+        return klass(filetype)
+
+    def __init__(self, scripts, scriptype, dest,
                  prefix='built', iocharset='utf-8', split_with_size=0):
         """
-        :param scripts: list of scripts
-        :param scriptype: type of scripts, should be 'css' or 'js'
+        :param scripts: list of files
+        :param scriptype: type of files, should be 'css' or 'js'
         :param dest: path to save built file
         :param prefix: prefix of built file (default: 'built')
         :param iocharset: result encoding for built file (default: utf-8)
@@ -39,6 +60,7 @@ class Compiler(object):
         self.prefix = prefix
         self.charset = iocharset
         self.dest = dest
+        self.backend = self.get_backend(scriptype)
         self.split_with_size = split_with_size
         assert isinstance(split_with_size, int)
         assert scriptype in ['css', 'js']
@@ -57,7 +79,7 @@ class Compiler(object):
         result = ''
         for f in self.scripts:
             result += os.path.basename(f)
-        
+
         suff = self._getunique_shakey(result)[:7]
         self._output_filename = self.prefix + suff + '.' + self.scriptype
         return self._output_filename
@@ -70,8 +92,8 @@ class Compiler(object):
         return newsha.hexdigest()
 
     def _openfile(self, filename, mode='r'):
-        """ Open file and returns its descriptor. 
-        
+        """ Open file and returns its descriptor.
+
         :param filename: path to file
         :param mode: mode for opening
         :raises: ScriptNotFound
@@ -83,11 +105,21 @@ class Compiler(object):
             raise ScriptNotFound(filename + ' could not be opened for read or write.')
 
     def prepare_scripts(self, forcebuild=False):
+        """ Combine all scripts into one stream.
+            .. deprecated:: 1.2
+            Use :func:`combine_filecontents` instead.
         """
-        Combines all content of scripts into one file. Returns True if 
+        return self.combine_filecontents(forcebuild)
+
+    def combine_filecontents(self, forcebuild=False):
+        """
+        ..py:method:: combine_filecontents([forcebuild : boolean]) -> boolean
+
+        Combines all content of scripts into one file. Returns True if
         file generated and False if file already exists.
 
-        :param forcebuild: should re-build scripts everytime
+        :param boolean forcebuild: should re-build scripts everytime
+        :rtype boolean:
         """
         _built_fname = os.path.join(self.dest, self.get_output_filename())
         if self.exists_andnot_force(forcebuild, _built_fname):
@@ -100,7 +132,8 @@ class Compiler(object):
                 # @todo implement splitting
                 pass
             fd = self._openfile(script)
-            _built_fd.write(fd.read())
+            content = self.backend.read(fd.read())
+            _built_fd.write(content)
             fd.close()
         _built_fd.close()
         return True
@@ -109,13 +142,13 @@ class Compiler(object):
         return os.path.exists(_built_fname) and not forcebuild
 
     def process(self, version='', forcebuild=False):
-        """ 
-        Run through scripts and make compiled scripts if attribute 
+        """
+        Run through scripts and make compiled scripts if attribute
         ``_just_combined`` is False.
         """
         if version:
             self.prefix += '.v%s.' % (str(version),)
-        if not self.prepare_scripts(forcebuild):
+        if not self.combine_filecontents(forcebuild):
             # File already exists, so no need to regenerate it again
             return False
         if self._just_combined:
@@ -129,11 +162,15 @@ class Compiler(object):
         return False
 
     def compile(self):
-        raise NotImplementedError
+        """ This method is called to start compress file. It is intended
+        to be overridden by a derived class; the base class implementation
+        does nothing.
+        """
+        return None
 
     _output_filename = None
     _just_combined = False
-    
+
     def get_extended_scripts(self):
         """ Not implemented """
         raise NotImplementedError
@@ -141,7 +178,7 @@ class Compiler(object):
 
 
 class GoogleJCCompiler(Compiler):
-    
+
     def compile(self, filename):
         """
         Executes google jc compiler command.
@@ -164,7 +201,7 @@ class GoogleJCCompiler(Compiler):
 
 
 class YuiJCCompiler(Compiler):
-    
+
     def compile(self, filename):
         """
         Executes yui compiler command
