@@ -11,17 +11,22 @@ except:
     JC_MEDIA_ROOT=os.path.join(settings.MEDIA_ROOT,'build')
 
 
-def compress_css(styles):
-    compress = CompressMedia()
+def compress_css(styles, with_ext=False):
+    compress = CompressMedia(with_ext)
     return compress.get_compiled_css_url(styles)
 
 
-def compress_js(scripts):
-    compress = CompressMedia()
+def compress_js(scripts, with_ext=False):
+    compress = CompressMedia(with_ext)
     return compress.get_compiled_js_url(scripts)
 
 
 class CompressMedia:
+
+    _with_ext = False
+
+    def __init__(self, with_ext):
+        self._with_ext = with_ext
 
     def get_media_url(self, url, mediatype, prefix=settings.MEDIA_URL):
         return prefix.rstrip('/') + '/%s/' % (mediatype, ) + url
@@ -29,7 +34,9 @@ class CompressMedia:
     def make_compiled(self, mediatype, items):
         media_urls = []
         for item in items:
-            filename = '%s.%s' % (item, mediatype)
+            filename = item
+            if not self._with_ext:
+                filename = '%s.%s' % (item, mediatype)
             url = self.get_media_url(filename, mediatype, prefix=settings.MEDIA_ROOT)
             media_urls.append(url)
 
@@ -41,7 +48,7 @@ class CompressMedia:
         compressor.set_combined(
             combined = getattr(settings, 'JC_ONLY_COMBINING', False))
         compressor.process(
-            version = str(getattr(settings, 'JC_SCRIPTS_VERSION', '')), 
+            version = str(getattr(settings, 'JC_SCRIPTS_VERSION', '')),
             forcebuild = getattr(settings, 'JC_FORCE_BUILD', False))
         return settings.COMPRESSED_MEDIA_URL + compressor.output_filename
 
@@ -52,7 +59,10 @@ class CompressMedia:
             return t % output
         markup = ''
         for item in label:
-            markup += t % self.get_media_url(item + '.js', 'js')
+            url = self.get_media_url(item, 'js')
+            if not self._with_ext:
+                url += '.js'
+            markup += t % url
         return markup
 
     def get_compiled_css_url(self, label):
@@ -62,5 +72,8 @@ class CompressMedia:
             return t % output
         markup = ''
         for item in label:
-            markup += t % self.get_media_url(item + '.css', 'css')
+            url = self.get_media_url(item, 'css')
+            if not self._with_ext:
+                url += '.css'
+            markup += t % url
         return markup

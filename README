@@ -39,7 +39,7 @@ COMPRESSED_MEDIA_URL = MEDIA_URL + 'build/'
 I have added support of backends to manipulate content of your files.
 Backend should be defined in settings files of django project.
 
-JCBACKEND="your.own.backend.Klass"
+JC_BACKEND="your.own.backend.Klass"
 
 Your backend should define only one method that gets opened file descriptor
 with content of script. You always can check what type currently handled
