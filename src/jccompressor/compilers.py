@@ -131,7 +131,7 @@ class Compiler(object):
             if self.split_with_size:
                 # @todo implement splitting
                 pass
-            fd = self._openfile(script)
+            fd = self._openfile(self.backend.pre_open(script))
             content = self.backend.read(fd)
             _built_fd.write(content)
             fd.close()

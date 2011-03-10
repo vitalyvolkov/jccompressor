@@ -28,11 +28,19 @@ COMPRESSED_MEDIA_URL = MEDIA_URL + 'build/'
 
 3. Use filters in your jinja2 template.
 
-{% set css = ['1.css', '2.css', '3.css'] %}
+Suppose you have three css files in your css folder with names 1, 2 and 3.css. 
+So that's enough to call this global function and filter.
+
+{% set css = ['1', '2', '3'] %}
 {{ css|compress_css }}
 
-{% set js = ['1.js', '2.js', '3.js'] %}
+That also suitable for JS files in /js/ folder.
+
+{% set js = ['1', '2', '3'] %}
 {{ js|compress_js }}
+
+Note, stylesheet files should be placed in `css` folder of your `MEDIA_ROOT`,
+and javascript files should be placed in `js` folder of `MEDIA_ROOT` folder.
 
 4. Usage of backends.
 
@@ -56,9 +64,17 @@ from jccompressor.backends.base import BaseJCBackend
 class StylusBackend(BaseJCBackend):
 
     def read(self, stream):
+	if self.filetype != 'css':
+            return stream.read()
         devnull = open(os.devnull, "w")
         try:
-            return subprocess.Popen(["stylus"], stdin=stream, stdout=devnull)
+            p = subprocess.Popen(["stylus"], stdin=stream, stdout=devnull)
+            return p.communicate()[0]
         except (OSError, subprocess.CalledProcessError):
             pass
         return ''
+
+
+Another function in your backend is ``pre_open()``. It always applicable for all
+of your scripts you apply to filter ``compress_css`` or ``compress_js`` when 
+compiler tries to open file before reading content.
