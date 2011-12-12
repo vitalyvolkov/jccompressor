@@ -7,7 +7,6 @@ compressing its content through yui-compiler or google-compiler.
 import codecs, hashlib, os, shutil
 
 import logging
-import re
 import subprocess
 
 from django.conf import settings
@@ -124,7 +123,6 @@ class Compiler(object):
         _built_fname = os.path.join(self.dest, self.get_output_filename())
         if self.exists_andnot_force(forcebuild, _built_fname):
             return False
-        logger.debug("Combining to %s", _built_fname)
         _built_fd = self._openfile(_built_fname, 'w')
         # collect all content of scripts into files to be compressed
         for script in self.scripts:
@@ -147,7 +145,10 @@ class Compiler(object):
         ``_just_combined`` is False.
         """
         if version:
-            self.prefix += '.v%s.' % (str(version),)
+            if hasattr(version, '__call__'):
+                self.prefix += '.v%s.' % version()
+            else:
+                self.prefix += '.v%s.' % (str(version),)
         if not self.combine_filecontents(forcebuild):
             # File already exists, so no need to regenerate it again
             return False

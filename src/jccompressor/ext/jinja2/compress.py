@@ -48,7 +48,7 @@ class CompressMedia:
         compressor.set_combined(
             combined = getattr(settings, 'JC_ONLY_COMBINING', False))
         compressor.process(
-            version = str(getattr(settings, 'JC_SCRIPTS_VERSION', '')),
+            version = getattr(settings, 'JC_SCRIPTS_VERSION', ''),
             forcebuild = getattr(settings, 'JC_FORCE_BUILD', False))
         return settings.COMPRESSED_MEDIA_URL + compressor.output_filename
 
