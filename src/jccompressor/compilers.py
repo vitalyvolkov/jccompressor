@@ -146,7 +146,7 @@ class Compiler(object):
         """
         if version:
             if hasattr(version, '__call__'):
-                self.prefix += '.v%s.' % version()
+                self.prefix += '.v%s.' % version(self.scriptype)
             else:
                 self.prefix += '.v%s.' % (str(version),)
         if not self.combine_filecontents(forcebuild):
