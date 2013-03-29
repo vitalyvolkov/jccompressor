@@ -99,6 +99,7 @@ class Compiler(object):
         :returns: opened file descriptor
         """
         try:
+            filename = os.path.join(settings.STATIC_ROOT, filename)
             return codecs.open(filename, mode, self.charset)
         except OSError:
             raise ScriptNotFound(filename + ' could not be opened for read or write.')

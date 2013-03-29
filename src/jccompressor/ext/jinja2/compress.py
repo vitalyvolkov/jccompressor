@@ -5,19 +5,17 @@ from django.conf import settings
 from jccompressor import JCCompressor
 
 
-try:
-    from django.conf.settings import JC_MEDIA_ROOT
-except:
-    JC_MEDIA_ROOT=os.path.join(settings.MEDIA_ROOT,'build')
+JC_MEDIA_ROOT = getattr(settings, 'JC_MEDIA_ROOT',
+                        os.path.join(settings.MEDIA_ROOT, 'build'))
 
 
-def compress_css(styles, with_ext=False):
-    compress = CompressMedia(with_ext)
+def compress_css(styles, prepend_path=None, with_ext=False):
+    compress = CompressMedia(prepend_path, with_ext)
     return compress.get_compiled_css_url(styles)
 
 
-def compress_js(scripts, with_ext=False):
-    compress = CompressMedia(with_ext)
+def compress_js(scripts, prepend_path=None, with_ext=False):
+    compress = CompressMedia(prepend_path, with_ext)
     return compress.get_compiled_js_url(scripts)
 
 
@@ -25,11 +23,14 @@ class CompressMedia:
 
     _with_ext = False
 
-    def __init__(self, with_ext):
+    def __init__(self, prepend_path, with_ext):
         self._with_ext = with_ext
+        self.prepend_path = prepend_path
 
-    def get_media_url(self, url, mediatype, prefix=settings.MEDIA_URL):
-        return prefix.rstrip('/') + '/%s/' % (mediatype, ) + url
+    def get_media_url(self, url, mediatype):
+        if self.prepend_path:
+            url = os.path.join(self.prepend_path, url)
+        return os.path.join(mediatype, url)
 
     def make_compiled(self, mediatype, items):
         media_urls = []
@@ -37,7 +38,7 @@ class CompressMedia:
             filename = item
             if not self._with_ext:
                 filename = '%s.%s' % (item, mediatype)
-            url = self.get_media_url(filename, mediatype, prefix=settings.MEDIA_ROOT)
+            url = self.get_media_url(filename, mediatype)
             media_urls.append(url)
 
         fullpath = JC_MEDIA_ROOT
@@ -46,10 +47,10 @@ class CompressMedia:
 
         compressor = JCCompressor.init(fullpath, mediatype, media_urls, [])
         compressor.set_combined(
-            combined = getattr(settings, 'JC_ONLY_COMBINING', False))
+            combined=getattr(settings, 'JC_ONLY_COMBINING', False))
         compressor.process(
-            version = getattr(settings, 'JC_SCRIPTS_VERSION', ''),
-            forcebuild = getattr(settings, 'JC_FORCE_BUILD', False))
+            version=getattr(settings, 'JC_SCRIPTS_VERSION', ''),
+            forcebuild=getattr(settings, 'JC_FORCE_BUILD', False))
         return settings.COMPRESSED_MEDIA_URL + compressor.output_filename
 
     def get_compiled_js_url(self, label):
