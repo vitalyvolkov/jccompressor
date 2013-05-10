@@ -45,7 +45,7 @@ class Compiler(object):
         return klass(filetype)
 
     def __init__(self, scripts, scriptype, dest,
-                 prefix='built', iocharset='utf-8', split_with_size=0):
+                 prefix='built', iocharset='utf-8'):
         """
         :param scripts: list of files
         :param scriptype: type of files, should be 'css' or 'js'
@@ -60,8 +60,6 @@ class Compiler(object):
         self.charset = iocharset
         self.dest = dest
         self.backend = self.get_backend(scriptype)
-        self.split_with_size = split_with_size
-        assert isinstance(split_with_size, int)
         assert scriptype in ['css', 'js']
 
     def set_combined(self, combined):
@@ -127,9 +125,6 @@ class Compiler(object):
         _built_fd = self._openfile(_built_fname, 'w')
         # collect all content of scripts into files to be compressed
         for script in self.scripts:
-            if self.split_with_size:
-                # @todo implement splitting
-                pass
             fd = self._openfile(self.backend.pre_open(script))
             content = self.backend.read(fd)
             _built_fd.write(content)
