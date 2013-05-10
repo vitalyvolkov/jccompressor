@@ -12,6 +12,7 @@ import subprocess
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.importlib import import_module
+from lockfile import LockFile, LockTimeout, NotLocked
 
 
 logger = logging.getLogger('jccompressor.compilers')
@@ -122,15 +123,32 @@ class Compiler(object):
         _built_fname = os.path.join(self.dest, self.get_output_filename())
         if self.exists_andnot_force(forcebuild, _built_fname):
             return False
-        _built_fd = self._openfile(_built_fname, 'w')
-        # collect all content of scripts into files to be compressed
-        for script in self.scripts:
-            fd = self._openfile(self.backend.pre_open(script))
-            content = self.backend.read(fd)
-            _built_fd.write(content)
-            fd.close()
-        _built_fd.close()
-        return True
+
+        lock_ = LockFile(os.path.join(settings.STATIC_ROOT, _built_fname))
+        while lock_.i_am_locking():
+            try:
+                lock_.acquire(timeout=3)
+            except LockTimeout:
+                lock_.break_lock()
+                lock_.acquire()
+
+        try:
+            _built_fd = self._openfile(_built_fname, 'w')
+            # collect all content of scripts into files to be compressed
+            for script in self.scripts:
+                fd = self._openfile(self.backend.pre_open(script))
+                content = self.backend.read(fd)
+                _built_fd.write(content)
+                fd.close()
+            _built_fd.close()
+        except:
+            try:
+                lock_.release()
+            except NotLocked:
+                pass
+            return False
+
+        return lock_
 
     def exists_andnot_force(self, forcebuild, _built_fname):
         return os.path.exists(_built_fname) and not forcebuild
@@ -145,17 +163,26 @@ class Compiler(object):
                 self.prefix += '.v%s.' % version(self.scriptype)
             else:
                 self.prefix += '.v%s.' % (str(version),)
-        if not self.combine_filecontents(forcebuild):
+        lock_ = self.combine_filecontents(forcebuild)
+        if not lock_:
             # File already exists, so no need to regenerate it again
             return False
         if self._just_combined:
+            try:
+                lock_.release()
+            except NotLocked:
+                pass
             return True
         filename = os.path.join(self.dest, self.output_filename)
         try:
-            logger.debug("Compressing to %s", filename)
-            return self.compile(filename)
+            self.compile(filename)
+            return True
         except (OSError, IOError, subprocess.CalledProcessError), e:
             logger.error('%r: %s', type(e), e)
+        try:
+            lock_.release()
+        except NotLocked:
+            pass
         return False
 
     def compile(self):
