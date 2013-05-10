@@ -234,6 +234,7 @@ class YuiJCCompiler(Compiler):
         """
         attrs = [
             'java',
+            '-Xss1M',
             '-jar',
             '%s/yuicompressor.jar' % Compiler.COMPILER_PATH,
             '-o',
