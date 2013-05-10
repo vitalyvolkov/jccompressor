@@ -127,7 +127,7 @@ class Compiler(object):
         lock_ = LockFile(os.path.join(settings.STATIC_ROOT, _built_fname))
         while lock_.i_am_locking():
             try:
-                lock_.acquire(timeout=3)
+                lock_.acquire(timeout=20)
             except LockTimeout:
                 lock_.break_lock()
                 lock_.acquire()
