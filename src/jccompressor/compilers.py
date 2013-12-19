@@ -138,7 +138,7 @@ class Compiler(object):
             for script in self.scripts:
                 fd = self._openfile(self.backend.pre_open(script))
                 content = self.backend.read(fd)
-                _built_fd.write(content)
+                _built_fd.write(content + '\n')
                 fd.close()
             _built_fd.close()
         except:
