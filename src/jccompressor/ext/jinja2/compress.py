@@ -9,13 +9,17 @@ JC_MEDIA_ROOT = getattr(settings, 'JC_MEDIA_ROOT',
                         os.path.join(settings.MEDIA_ROOT, 'build'))
 
 
-def compress_css(styles, prepend_path=None, with_ext=False):
+def compress_css(styles, prepend_path=None, with_ext=False, dontMinify=None):
     compress = CompressMedia(prepend_path, with_ext)
+    if dontMinify is not None:
+        compress.combined = dontMinify
     return compress.get_compiled_css_url(styles)
 
 
-def compress_js(scripts, prepend_path=None, with_ext=False):
+def compress_js(scripts, prepend_path=None, with_ext=False, dontMinify=None):
     compress = CompressMedia(prepend_path, with_ext)
+    if dontMinify is not None:
+        compress.combined = dontMinify
     return compress.get_compiled_js_url(scripts)
 
 
@@ -26,6 +30,9 @@ class CompressMedia:
     def __init__(self, prepend_path, with_ext):
         self._with_ext = with_ext
         self.prepend_path = prepend_path
+        self.combined = getattr(settings, 'JC_ONLY_COMBINING', False)
+        self.version = getattr(settings, 'JC_SCRIPTS_VERSION', '')
+        self.forcebuild = getattr(settings, 'JC_FORCE_BUILD', False)
 
     def get_media_url(self, url, mediatype):
         if self.prepend_path:
@@ -46,11 +53,8 @@ class CompressMedia:
             os.makedirs(fullpath)
 
         compressor = JCCompressor.init(fullpath, mediatype, media_urls, [])
-        compressor.set_combined(
-            combined=getattr(settings, 'JC_ONLY_COMBINING', False))
-        compressor.process(
-            version=getattr(settings, 'JC_SCRIPTS_VERSION', ''),
-            forcebuild=getattr(settings, 'JC_FORCE_BUILD', False))
+        compressor.set_combined(combined=self.combined)
+        compressor.process(version=self.version, forcebuild=self.forcebuild)
         return settings.COMPRESSED_MEDIA_URL + compressor.output_filename
 
     def get_compiled_js_url(self, label):
