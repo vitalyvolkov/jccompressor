@@ -15,7 +15,7 @@ for dirpath, dirnames, filenames in os.walk(data_dir):
 
 
 setup(name="jccompressor",
-      version="0.2.1",
+      version="0.2.2",
       description="Simple compressor for js and css files",
       author="Vitaly Volkov",
       author_email="vw@vedjo.com.ua",
