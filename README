@@ -1,6 +1,6 @@
 Simple compressor for javascript and css files. Purpose of this package is to
 make compressing with easy ways. It means that you do not need run compressor
-in single mode through shell or another application to get new files, but get 
+in single mode through shell or another application to get new files, but get
 them right after you open webpage.
 
 It includes jinja2 filter to make it easy.
@@ -28,7 +28,7 @@ COMPRESSED_MEDIA_URL = MEDIA_URL + 'build/'
 
 3. Use filters in your jinja2 template.
 
-Suppose you have three css files in your css folder with names 1, 2 and 3.css. 
+Suppose you have three css files in your css folder with names 1, 2 and 3.css.
 So that's enough to call this global function and filter.
 
 {% set css = ['1', '2', '3'] %}
@@ -76,5 +76,9 @@ class StylusBackend(BaseJCBackend):
 
 
 Another function in your backend is ``pre_open()``. It always applicable for all
-of your scripts you apply to filter ``compress_css`` or ``compress_js`` when 
+of your scripts you apply to filter ``compress_css`` or ``compress_js`` when
 compiler tries to open file before reading content.
+
+
+Optional ``post_compile`` of backend receive compiled css content and may be handled
+as your wish.

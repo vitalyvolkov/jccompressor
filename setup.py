@@ -9,18 +9,22 @@ data_files = []
 for dirpath, dirnames, filenames in os.walk(data_dir):
     # Ignore dirnames that start with '.'
     for i, dirname in enumerate(dirnames):
-        if dirname.startswith('.'): del dirnames[i]
+        if dirname.startswith('.'):
+            del dirnames[i]
     for fname in filenames:
-        data_files.append(os.path.join(dirpath, fname).replace('src/jccompressor/', ''))
+        data_files.append(
+            os.path.join(dirpath, fname).replace('src/jccompressor/', ''))
 
 
 setup(name="jccompressor",
-      version="0.2.3",
+      version="0.2.4",
       description="Simple compressor for js and css files",
       author="Vitaly Volkov",
       author_email="hash.3g@gmail.com",
-      packages=['jccompressor', 'jccompressor.ext', 'jccompressor.ext.django',
-                'jccompressor.ext.django.templatetags', 'jccompressor.ext.jinja2',
+      packages=['jccompressor', 'jccompressor.ext',
+                'jccompressor.ext.django',
+                'jccompressor.ext.django.templatetags',
+                'jccompressor.ext.jinja2',
                 'jccompressor.backends'],
-      package_dir={'jccompressor':'src/jccompressor'},
+      package_dir={'jccompressor': 'src/jccompressor'},
       package_data={'jccompressor': data_files})

@@ -154,10 +154,7 @@ class Compiler(object):
         return os.path.exists(_built_fname) and not forcebuild
 
     def process(self, version='', forcebuild=False):
-        """
-        Run through scripts and make compiled scripts if attribute
-        ``_just_combined`` is False.
-        """
+        """Run through scripts and make compiled scripts."""
         if version:
             if hasattr(version, '__call__'):
                 self.prefix += '.v%s.' % version(self.scriptype)
@@ -176,6 +173,10 @@ class Compiler(object):
         filename = os.path.join(self.dest, self.output_filename)
         try:
             self.compile(filename)
+            if (hasattr(self.backend, 'post_compile') and
+                    callable(getattr(self.backend, 'post_compile'))):
+                content = self.backend.post_compile(open(filename).read())
+                open(filename, 'w').write(content)
             return True
         except (OSError, IOError, subprocess.CalledProcessError), e:
             logger.error('%r: %s', type(e), e)
