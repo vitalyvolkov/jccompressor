@@ -85,7 +85,7 @@ class Compiler(object):
 
     def _getunique_shakey(self, value):
         """ Returns digest of sha for value. """
-        newsha = hashlib.new('sha')
+        newsha = hashlib.new('sha256')
         newsha.update(value)
         return newsha.hexdigest()
 
