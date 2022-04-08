@@ -86,7 +86,7 @@ class Compiler(object):
     def _getunique_shakey(self, value):
         """ Returns digest of sha for value. """
         newsha = hashlib.new('sha256')
-        newsha.update(value)
+        newsha.update(value.encode('utf-8'))
         return newsha.hexdigest()
 
     def _openfile(self, filename, mode='r'):
