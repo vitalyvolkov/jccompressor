@@ -35,7 +35,7 @@ class Compiler(object):
         try:
             mod_name, klass_name = path.rsplit('.', 1)
             mod = import_module(mod_name)
-        except ImportError, e:
+        except ImportError as e:
             raise ImproperlyConfigured(('Error importing jccompressor backend '
                                         'module %s: "%s"' % (mod_name, e)))
         try:
@@ -85,8 +85,8 @@ class Compiler(object):
 
     def _getunique_shakey(self, value):
         """ Returns digest of sha for value. """
-        newsha = hashlib.new('sha')
-        newsha.update(value)
+        newsha = hashlib.new('sha256')
+        newsha.update(value.encode('utf-8'))
         return newsha.hexdigest()
 
     def _openfile(self, filename, mode='r'):
@@ -178,7 +178,7 @@ class Compiler(object):
                 content = self.backend.post_compile(open(filename).read())
                 open(filename, 'w').write(content)
             return True
-        except (OSError, IOError, subprocess.CalledProcessError), e:
+        except (OSError, IOError, subprocess.CalledProcessError) as e:
             logger.error('%r: %s', type(e), e)
         try:
             lock_.release()
